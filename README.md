@@ -1,3 +1,3 @@
-安装方法：\n
-cmake . \n
+安装方法：  
+cmake .  
 make
