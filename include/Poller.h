@@ -15,6 +15,7 @@ private:
     EventLoop* loop_;
 protected:
     //允许派生类访问
+    //key:sockfd value:sockfd所属的channel通道类型
     using ChannelMap=unordered_map<int,Channel*>;
     ChannelMap channels_;
 public:

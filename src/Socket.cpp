@@ -6,7 +6,7 @@
 
 Socket::~Socket(){}
 
-void Socket::bindaddress(const InetAddr& localaddr){
+void Socket::bindaddress(const InetAddress& localaddr){
     if(0 !=::bind(sockfd_,(struct sockaddr*)localaddr.getSockAddr(),sizeof(sockaddr_in))){
         FATAL_LOG("bind error:%d \n",sockfd_);
     }
@@ -18,11 +18,12 @@ void Socket::listen(){
     }
 }
 
-int Socket::accept(InetAddr* peeraddr){
+int Socket::accept(InetAddress* peeraddr){
     struct sockaddr_in address;
-    socklen_t len;
+    socklen_t len=sizeof address;
     bzero(&address,sizeof address);
-    int connfd=::accept(sockfd_,(struct sockaddr*)&address,&len);
+    //使用的是accept4,比accept多一个参数
+    int connfd=::accept4(sockfd_,(struct sockaddr*)&address,&len,SOCK_NONBLOCK | SOCK_CLOEXEC);
     if(connfd >=0){
         peeraddr->setSockAddr(address);
     }

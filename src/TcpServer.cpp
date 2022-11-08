@@ -1,10 +1,11 @@
 #include "TcpServer.h"
 #include "logger.h"
 #include "TcpConnection.h"
-#include "InetAddr.h"
+#include "InetAddress.h"
 #include<string>
 #include<strings.h>
 #include<sys/socket.h>
+#include<iostream>
 #include<netinet/in.h>
 
 EventLoop* CheckLoopNotNull(EventLoop *loop){
@@ -14,14 +15,15 @@ EventLoop* CheckLoopNotNull(EventLoop *loop){
     return loop;
 }
 
-TcpServer::TcpServer(EventLoop* loop,const InetAddr& listenAddr,const std::string& name,Option option)
+TcpServer::TcpServer(EventLoop* loop,const InetAddress& listenAddr,const std::string& name,Option option)
     :loop_(CheckLoopNotNull(loop)),
-    acceptor_(new Acceptor(loop,listenAddr,option)),     //Acceptor只运行在mainloop
+    acceptor_(new Acceptor(loop,listenAddr,option==kReusePort)),     //Acceptor只运行在mainloop
     threadpool_(new EventloopThreadPool(loop,name)),
     name_(name),
-    ipPort_(listenAddr.toIP_PORT()),
+    ipPort_(listenAddr.toIpPort()),
     connectionCallBack_(),
-    nextConnId_(1)
+    nextConnId_(1),
+    start_(0)
     {   
         //当有新用户连接时，会执行newConnection回调
         acceptor_->setConnectionCallBack(std::bind(&TcpServer::newConnection,this,std::placeholders::_1,std::placeholders::_2));
@@ -51,25 +53,26 @@ void TcpServer::setThreadNum(int numThreads){
     threadpool_->setThreadNum(numThreads);
 }
 
-void TcpServer::newConnection(int sockfd,const InetAddr& peerAddr){
+void TcpServer::newConnection(int sockfd,const InetAddress& peerAddr){
     //轮询得到可用的subloop
+    std::cout<<"run to here"<<std::endl;
     EventLoop* ioLoop=threadpool_->getNextloops();
-    char buf[64];
+    char buf[64]= {0};
     snprintf(buf,sizeof(buf),"-%s#%d",ipPort_.c_str(),nextConnId_);
     ++nextConnId_;
     string connName= name_ + buf;
-
-    INFO_LOG("TcpServer::newConnection[%s] - new connection [%s] from %s \n",name_.c_str(),connName.c_str(),peerAddr.toIP_PORT().c_str());
+    std::cout<<"run to here1"<<std::endl;
+    INFO_LOG("TcpServer::newConnection[%s] - new connection [%s] from %s \n",name_.c_str(),connName.c_str(),peerAddr.toIpPort().c_str());
 
     struct sockaddr_in local;
     ::bzero(&local,sizeof(local));
     socklen_t addrlen=sizeof(local);
-    //获取sockfd的信息并打包成InetAddr
+    //获取sockfd的信息并打包成InetAddress
     if(::getsockname(sockfd,(struct sockaddr*)&local,&addrlen)<0){
         ERROR_LOG("%s","TcpServer::getlocalAddr");
     }
 
-    InetAddr localAddr(local);
+    InetAddress localAddr(local);
 
     //根据连接成功的sockfd，创建TcpConnection连接对象
     TcpConnectionPtr conn(new TcpConnection(ioLoop,connName,sockfd,localAddr,peerAddr));
@@ -83,7 +86,7 @@ void TcpServer::newConnection(int sockfd,const InetAddr& peerAddr){
     conn->setWriteCompletCallBack(writeCompletCallBack_);
     //设置了如何关闭连接的回调
     conn->setCloseCallBack(std::bind(&TcpServer::removeConnection,this,std::placeholders::_1));
-
+    std::cout<<"run to here2"<<std::endl;
     //建立连接
     ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished,conn));
 }

@@ -7,9 +7,10 @@
 #include<atomic>
 #include<unordered_map>
 #include "CallBack.h"
-#include "InetAddr.h"
+#include "InetAddress.h"
 #include "Acceptor.h"
 #include "EventloopThreadPool.h"
+#include "TcpConnection.h"
 
 class EventLoop;
 
@@ -22,7 +23,7 @@ public:
         kReusePort
     };
 
-    TcpServer(EventLoop* loop,const InetAddr& listenAddr,const std::string& name,Option option = kNoReusePort);
+    TcpServer(EventLoop* loop,const InetAddress& listenAddr,const std::string& name,Option option = kNoReusePort);
     ~TcpServer();
 
     //开启服务器监听
@@ -35,7 +36,7 @@ public:
     void setWriteCompletCallBack(const WriteCompletCallBack& cb){ writeCompletCallBack_=cb;};
 private:
     //新建立连接
-    void newConnection(int sockfd,const InetAddr& peerAddr);
+    void newConnection(int sockfd,const InetAddress& peerAddr);
     //删除连接
     void removeConnection(const TcpConnectionPtr& conn);
     void removeConnectionInLoop(const TcpConnectionPtr& conn);

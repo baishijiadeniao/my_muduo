@@ -4,15 +4,15 @@
 #include "Socket.h"
 #include "Channel.h"
 #include <functional>
-#include "InetAddr.h"
+#include "InetAddress.h"
 
 class EventLoop;
 
 class Acceptor: noncopyable
 {
 public:
-    using NewConnectionCallBack=function<void(int sockfd,const InetAddr&)>;
-    Acceptor(EventLoop* loop,const InetAddr& listenAddr,bool reuseport);
+    using NewConnectionCallBack=function<void(int sockfd,const InetAddress&)>;
+    Acceptor(EventLoop* loop,const InetAddress& listenAddr,bool reuseport);
     ~Acceptor();
     void setConnectionCallBack(const NewConnectionCallBack& cb){
         newConnectionCallBack=cb;

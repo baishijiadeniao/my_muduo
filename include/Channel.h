@@ -4,6 +4,7 @@
 #include "timestamp.h"
 #include "EventLoop.h"
 #include <functional>
+#include<iostream>
 #include <memory>
 using namespace std;
 
@@ -21,8 +22,8 @@ public:
     int Event() const {return events_;};
     int index()const {return index_;}
     void set_index(int new_index){ index_=new_index;}
-    void set_revent(int revent){ receive_=revent;}
-
+    void set_revents(int revent){ std::cout<<"revents_: "<<revents_<<std::endl; revents_ = revent ;}
+    int get_revent() const{return revents_;}
     //在新连接建立的时候将TcpConnection和channel绑定，防止TcpConnetion不存在Channel调用TcpConnetion中相应的回调
     void tie(const std::shared_ptr<void>& obj);
 
@@ -30,7 +31,7 @@ public:
     void handlewithEvent(timestamp);
     void handlewithGuard(timestamp);
     //判断是否有事件,是否正在读写事件
-    bool isnoneEvent() const {return events_==knoneEvent;};
+    bool isnoneEvent() const {return events_==kNoneEvent;};
     bool iswriting() const{return events_ & kWriteEvent;}
     bool isreading() const{return events_ & kReadEvent;}
 
@@ -39,7 +40,7 @@ public:
     void disableReadEvent() { events_ &= ~kReadEvent; update();};
     void enableWriteEvent() { events_ |= kWriteEvent; update();};
     void disableWriteEvent(){ events_ &= ~kWriteEvent; update();};
-    void disableAllEvent(){ events_ = knoneEvent; update();};
+    void disableAllEvent(){ events_ = kNoneEvent; update();};
     //Channel无法直接调用poller的函数，而是通过eventloop间接调用
     //Channel update() remove() -> eventloop updateChannel()removeChannel() -> Poller updateChannel()removeChannel()
     void update();
@@ -55,11 +56,12 @@ public:
     //删除fd
     void remove();
 private:
+    //poller监听的对象
     int fd_;
     //感兴趣的事件
     int events_;
     //正在发生的事件
-    int receive_;
+    int revents_;
     EventLoop* loop_;
     int index_;
     //回调函数
@@ -70,5 +72,5 @@ private:
     //一些读写事件
     static const int kReadEvent;
     static const int kWriteEvent;
-    static const int knoneEvent; 
+    static const int kNoneEvent; 
 };

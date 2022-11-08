@@ -1,10 +1,12 @@
 #pragma once
 
 #include "noncopyable.h"
-#include "InetAddr.h"
+#include "InetAddress.h"
 #include "Buffer.h"
 #include "CallBack.h"
+#include "timestamp.h"
 #include<memory>
+#include<string>
 #include<atomic>
 
 class EventLoop;
@@ -24,13 +26,13 @@ public:
     TcpConnection(EventLoop* loop,
                   const std::string nameArg,
                   int sockfd,         //TcpServer提供
-                  const InetAddr& localAddr,
-                  const InetAddr& peerAddr);
+                  const InetAddress& localAddr,
+                  const InetAddress& peerAddr);
     ~TcpConnection();
 
     const std::string& name(){ return name_;}
-    const InetAddr& localAddr(){return localaddr_;}
-    const InetAddr& peerAddr(){return peeraddr_;}
+    const InetAddress& localAddress(){return localaddr_;}
+    const InetAddress& peerAddress(){return peeraddr_;}
     bool isReading() const {return reading_;}
     
     //发送数据
@@ -104,8 +106,8 @@ private:
     //和acceptor类似 Acceptor=>mainloop TcpConnection=>subloop
     std::unique_ptr<Channel> channel_;
     std::unique_ptr<Socket> socket_;
-    const InetAddr localaddr_;
-    const InetAddr peeraddr_;
+    const InetAddress localaddr_;
+    const InetAddress peeraddr_;
 
     //用于存放读入数据的缓冲区
     Buffer inputBuffer_;

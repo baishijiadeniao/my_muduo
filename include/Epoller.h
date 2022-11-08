@@ -16,14 +16,13 @@ class Epoller : public Poller
 private:
     //初始化EventList数组的长度
     static const int kInitEventListSize = 16;
-    EventLoop *loop_;
     //存放事件的列表，通过vector保存，方便扩容
     using EventList = vector<struct epoll_event>;
     EventList events_;
     int epollfd_;
     
     //向eventloop返回活跃的channel列表
-    void fillActivateChannels(int numEvents,ChannelList*);
+    void fillActivateChannels(int numEvents,ChannelList*) const;
     //调用Epoll_ctl注册事件
     void update(int operation,Channel* channel);
 public:

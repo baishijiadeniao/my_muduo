@@ -7,18 +7,18 @@
 
 
 //打包sockaddr_in
-class InetAddr
+class InetAddress
 {
 private:
     struct sockaddr_in address_;
 public:
-    explicit InetAddr(uint16_t port=0,std::string ip="127.0.0.1");
-    explicit InetAddr(const struct sockaddr_in& addr):address_(addr){}
+    explicit InetAddress(std::string ip="127.0.0.1",uint16_t port=0);
+    explicit InetAddress(const struct sockaddr_in& addr):address_(addr){}
     struct sockaddr_in m_address(){ return address_;}
     //获取ip
     std::string toIP() const;
     //获取ip+端口
-    std::string toIP_PORT() const;
+    std::string toIpPort() const;
     const sockaddr_in* getSockAddr() const { return &address_;}
     void setSockAddr (const sockaddr_in& addr){ address_=addr;}
 };

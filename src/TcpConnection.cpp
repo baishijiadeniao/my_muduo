@@ -3,10 +3,11 @@
 #include "Channel.h"
 #include "Socket.h"
 #include "timestamp.h"
-#include "InetAddr.h"
+#include "InetAddress.h"
 #include<string>
 #include<memory>
 #include<netinet/tcp.h>
+#include<iostream>
 #include<sys/socket.h>
 #include<errno.h>
 
@@ -21,8 +22,8 @@ static EventLoop* CheckLoopNotNull(EventLoop *loop){
 TcpConnection::TcpConnection(EventLoop* loop,
                   const std::string nameArg,
                   int sockfd,         //TcpServer提供
-                  const InetAddr& localAddr,
-                  const InetAddr& peerAddr):
+                  const InetAddress& localAddr,
+                  const InetAddress& peerAddr):
                   loop_(loop),
                   state_(kConnecting),
                   reading_(true),
@@ -66,10 +67,10 @@ TcpConnection::~TcpConnection(){
 
 void TcpConnection::connectEstablished(){
     setState(kConnected);
-    //绑定Channel和TcpConnection，使用弱引用智能指针确保TcpConnetction存在
+    //绑定Channel和TcpConnection，使用弱引用智能指针确保TcpConnetction存在(如果tcpConnection不存在了则不执行相应的回调，比如客户端退出了就不执行回调了)
     channel_->tie(shared_from_this());
     channel_->enableReadEvent();
-
+    std::cout<<"run to here4"<<std::endl;
     //建立连接的时候调用一次，关闭连接和handleclose的时候调用一次
     connectionCallBack_(shared_from_this());
 }

@@ -1,7 +1,8 @@
 #include "Acceptor.h"
 #include "logger.h"
-#include "InetAddr.h"
+#include "InetAddress.h"
 #include<unistd.h>
+#include<iostream>
 static int CreateNonBlockingOrDie(){
     int sockfd = socket(AF_INET,SOCK_STREAM | SOCK_CLOEXEC | SOCK_NONBLOCK,IPPROTO_TCP);
     if (sockfd<0)
@@ -11,7 +12,7 @@ static int CreateNonBlockingOrDie(){
     return sockfd;
 }
 
-Acceptor::Acceptor(EventLoop* loop,const InetAddr& listenAddr,bool reuseport)
+Acceptor::Acceptor(EventLoop* loop,const InetAddress& listenAddr,bool reuseport)
     :loop_(loop),
     acceptSocket_(CreateNonBlockingOrDie()),
     acceptChannel_(loop,acceptSocket_.fd()),
@@ -36,8 +37,10 @@ void Acceptor::listen(){
 }
 
 void Acceptor::handleread(){
-    InetAddr peerAddr;
+    InetAddress peerAddr;
+    std::cout<<"run to here-1"<<std::endl;
     int connfd=acceptSocket_.accept(&peerAddr);
+    std::cout<<"connfd: "<<connfd<<std::endl;
     if(connfd>=0){
         if(newConnectionCallBack){
             newConnectionCallBack(connfd,peerAddr);  //负责轮询、唤醒subloop，然后将channel分发给subloop

@@ -1,5 +1,6 @@
 #include "Epoller.h"
 #include <unistd.h>
+#include<iostream>
 #include <errno.h>
 #include "logger.h"
 #include <assert.h>
@@ -14,7 +15,7 @@ const int kdeleted=2;
 
 //注意这里要初始化基类对象，因为我们声明了Poller的构造函数，Poller没有默认构造函数，所以Poller不能用默认构造函数初始化对象
 //我们必须显示地调用Poller带参的构造函数
-Epoller::Epoller(EventLoop* loop):Poller(loop),loop_(loop),
+Epoller::Epoller(EventLoop* loop):Poller(loop),events_(kInitEventListSize),
         epollfd_(::epoll_create1(EPOLL_CLOEXEC)){
         if(epollfd_<0){
             FATAL_LOG("EPOLL create failure: %d\n",errno);
@@ -27,22 +28,18 @@ Epoller::~Epoller(){
 
 void Epoller::updateChannel(Channel* channel){
     //调用update
-    int index=channel->index();
+    const int index=channel->index();
     if(index == knew || index == kdeleted){
-        int fd=channel->fd();
         if(index==knew){
-            assert(channels_.find(fd) == channels_.end());
+            int fd=channel->fd();
             channels_[fd]=channel;
 
-        }else{
-            assert(channels_.find(fd) != channels_.end());
-            assert(channels_[fd]==channel);
         }
         channel->set_index(kadded);
+        update(EPOLL_CTL_ADD,channel);
     }else{
+        // channel已经在poller上注册过了
         int fd=channel->fd();
-        assert(channels_.find(fd) != channels_.end());
-        assert(channels_[fd]==channel);
         if(channel->isnoneEvent()){
             update(EPOLL_CTL_DEL,channel);
             channel->set_index(kdeleted);
@@ -56,28 +53,28 @@ void Epoller::removeChannel(Channel* channel){
         //del事件
         int index=channel->index();
         int fd=channel->fd();
-        assert(channels_.find(fd) != channels_.end());
-        assert(channels_[fd]==channel);
-        assert(index == kadded || index == kdeleted);
+        channels_.erase(fd);
         if( index == kadded){
             update(EPOLL_CTL_DEL,channel);
         }
         channel->set_index(knew);
-        channels_.erase(fd);
 }
 
 void Epoller::update(int operation,Channel* channel){
     int fd=channel->fd();
     struct epoll_event event;
-    memset(&event,0,sizeof(event));
+    bzero(&event, sizeof event);
     event.events=channel->Event();
-    event.data.ptr=channel;
     event.data.fd=fd;
-    if(::epoll_ctl(epollfd_,operation,fd,&event)<0){\
+    event.data.ptr=channel;
+    // std::cout<<"run to here19 channel"<<channel->get_revent()<<std::endl;
+    std::cout<<"run to here19 fd"<<event.data.fd<<std::endl;
+    std::cout<<"operation: "<<operation<<std::endl;
+    if(::epoll_ctl(epollfd_,operation,fd,&event)<0){
         if(operation==EPOLL_CTL_DEL)
-            ERROR_LOG("epoll_ctl error:%d\n",errno);
+            ERROR_LOG("epoll_ctl del error:%d\n",errno);
         else
-            FATAL_LOG("epoll_ctl error:%d\n",errno);
+            FATAL_LOG("epoll_ctl add/mod error:%d\n",errno);
     }    
 }
 
@@ -86,10 +83,12 @@ timestamp Epoller::poll(int timeoutMs,ChannelList* ChannelActiveList){
     //保存错误，防止被后续产生的错误刷新掉
     int saveErrno=errno;
     timestamp now_time;
+    std::cout<<"numEvent: "<<numEvent<<std::endl;
     if(numEvent>0){
         //减少日志带来的性能开销
         DEBUG_LOG(" %d %s -> %s",numEvent,__FUNCTION__ ,"event happen");
         fillActivateChannels(numEvent,ChannelActiveList);
+        
         if(events_.size()==numEvent){
             events_.resize(events_.size()*2);
         }
@@ -105,11 +104,18 @@ timestamp Epoller::poll(int timeoutMs,ChannelList* ChannelActiveList){
     return now_time;
 }
 
-void Epoller::fillActivateChannels(int numEvents,ChannelList* EventList){
+void Epoller::fillActivateChannels(int numEvents,ChannelList* EventList) const{
+    std::cout<<"run to here14  numEvents"<<numEvents<<std::endl;
     for(int i=0;i<numEvents;i++){
         Channel* channel=static_cast<Channel*>(events_[i].data.ptr);
-        channel->set_revent(events_[i].events);
+        std::cout<<"run to here15"<<std::endl;
+        std::cout<<"e "<<channel->Event()<<std::endl;
+        std::cout<<"events_[i].events "<<events_[i].events<<std::endl;
+        channel->set_revents(events_[i].events);
+        std::cout<<"run to here16"<<std::endl;
         EventList->push_back(channel);
+        std::cout<<"run to here17"<<std::endl;
     }
+    std::cout<<"EventList.size() "<<EventList->size()<<std::endl;
 }
 
