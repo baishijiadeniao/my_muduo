@@ -13,15 +13,17 @@ cmake ..
 make
 
 cd ..
-pwd
-# if [ ! -d /usr/include/mymuduo ]; then
-#     mkdir /usr/include/mymuduo
-# fi
 
-# for header in `ls ./include/*.h`
-#     cp $header /usr/include/mymuduo
-# fi
+if [ ! -d /usr/include/mymuduo ]; then
+    mkdir /usr/include/mymuduo
+fi
 
-# cp ./lib/libmymuduo.so /usr/lib
 
-# ldconfig
+for header in `ls ./include/*.h`
+do
+    cp $header /usr/include/mymuduo
+done
+
+cp ./lib/libm_mduo.so /usr/lib
+
+ldconfig

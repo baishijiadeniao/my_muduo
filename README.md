@@ -1,3 +1,2 @@
 安装方法：  
-cmake .  
-make
+sudo sh install.h
