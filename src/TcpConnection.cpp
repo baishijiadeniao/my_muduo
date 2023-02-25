@@ -70,7 +70,6 @@ void TcpConnection::connectEstablished(){
     //绑定Channel和TcpConnection，使用弱引用智能指针确保TcpConnetction存在(如果tcpConnection不存在了则不执行相应的回调，比如客户端退出了就不执行回调了)
     channel_->tie(shared_from_this());
     channel_->enableReadEvent();
-    std::cout<<"run to here4"<<std::endl;
     //建立连接的时候调用一次，关闭连接和handleclose的时候调用一次
     connectionCallBack_(shared_from_this());
 }
@@ -114,7 +113,9 @@ void TcpConnection::send(const std::string &buf){
 /* 真正发送数据的函数，如果一次性发送不完则调用handleWrite回调，
 因为发送数据，应用写得快，内核发送数据满，所以要设置缓冲区，并设置水位回调 */
 void TcpConnection::sendInLoop(const void* message,size_t len){
+    //已发送数据
     ssize_t nwrote;
+    //剩余未发送数据
     size_t remaining;
     bool faultError = false;
     if(state_ == kDisconnected){

@@ -19,12 +19,13 @@ void Channel::update(){
 }
 
 void Channel::tie(const std::shared_ptr<void>& obj){
+    //weak_ptr指向和shared_ptr相同的对象
     tie_=obj;
     tied_ = true;
 }
 
 void Channel::handlewithEvent(timestamp revents_time){
-    std::cout<<"run to here7"<<std::endl;
+    //判断这个channel是属于acceptor的还是Tcpconnection的,如果是tcpconnection的则要确保tcpconnection和channel绑定
     if(tied_){
         //用于监听读写事件的Channel，与TcpConnection对应，直接调用回调函数
         //弱引用指针提升为强引用
@@ -33,12 +34,12 @@ void Channel::handlewithEvent(timestamp revents_time){
             handlewithGuard(revents_time);
         }
     }else{
-        std::cout<<"run to here8"<<std::endl;
         //用于监听连接的Channel，与Acceptor对应，直接调用回调函数
         handlewithGuard(revents_time);
     }
 }
 
+//调用事件处理器
 void Channel::handlewithGuard(timestamp revents_time){
     INFO_LOG("channel handleEvent revents:%d\n", revents_);
     if((revents_ & EPOLLHUP) && !(revents_ & EPOLLIN)){
@@ -48,7 +49,6 @@ void Channel::handlewithGuard(timestamp revents_time){
         ErrorCallBack();
     }
     if(revents_ & (EPOLLIN | EPOLLPRI)){
-        std::cout<<"run to here9"<<std::endl;
         ReadCallBack(revents_time);
     }
     if(revents_ & EPOLLOUT){

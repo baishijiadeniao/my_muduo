@@ -67,8 +67,6 @@ void Epoller::update(int operation,Channel* channel){
     event.events=channel->Event();
     event.data.fd=fd;
     event.data.ptr=channel;
-    // std::cout<<"run to here19 channel"<<channel->get_revent()<<std::endl;
-    std::cout<<"run to here19 fd"<<event.data.fd<<std::endl;
     std::cout<<"operation: "<<operation<<std::endl;
     if(::epoll_ctl(epollfd_,operation,fd,&event)<0){
         if(operation==EPOLL_CTL_DEL)
@@ -105,16 +103,12 @@ timestamp Epoller::poll(int timeoutMs,ChannelList* ChannelActiveList){
 }
 
 void Epoller::fillActivateChannels(int numEvents,ChannelList* EventList) const{
-    std::cout<<"run to here14  numEvents"<<numEvents<<std::endl;
     for(int i=0;i<numEvents;i++){
         Channel* channel=static_cast<Channel*>(events_[i].data.ptr);
-        std::cout<<"run to here15"<<std::endl;
         std::cout<<"e "<<channel->Event()<<std::endl;
         std::cout<<"events_[i].events "<<events_[i].events<<std::endl;
         channel->set_revents(events_[i].events);
-        std::cout<<"run to here16"<<std::endl;
         EventList->push_back(channel);
-        std::cout<<"run to here17"<<std::endl;
     }
     std::cout<<"EventList.size() "<<EventList->size()<<std::endl;
 }

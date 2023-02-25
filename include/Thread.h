@@ -17,6 +17,7 @@ private:
     using Threadfunctor=std::function<void()>;
     bool started_;
     bool join_;
+    //原子变量，创建的线程数
     static std::atomic_int numCreated_;
     pid_t tid_;
     //不能直接new一个线程，因为直接创建线程线程就会立刻开始工作，所以先要创建指针

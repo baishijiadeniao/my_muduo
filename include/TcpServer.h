@@ -40,11 +40,14 @@ private:
     //删除连接
     void removeConnection(const TcpConnectionPtr& conn);
     void removeConnectionInLoop(const TcpConnectionPtr& conn);
+    
     EventLoop* loop_;
     const std::string ipPort_;
     const std::string name_;
+
     std::unique_ptr<Acceptor> acceptor_;
     std::shared_ptr<EventloopThreadPool> threadpool_;
+
     std::atomic_int start_;
     int nextConnId_;
     using ConnetcionMap=std::unordered_map<std::string,TcpConnectionPtr>;

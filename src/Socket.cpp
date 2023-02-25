@@ -36,14 +36,17 @@ void Socket::shutdownwrite(){
     }
 }
 
+//与nagle算法有关
 void Socket::setTCPnoDelay(bool on){
     int optval= on ? 1:0;
     ::setsockopt(sockfd_,IPPROTO_TCP,TCP_NODELAY,&optval,sizeof optval);
 }
+//支持多个进程或者线程绑定到同一端口
 void Socket::setReusePort(bool on){
     int optval= on ? 1:0;
     ::setsockopt(sockfd_,SOL_SOCKET,SO_REUSEPORT,&optval,sizeof optval);
 }
+//一般来说，一个端口释放后会等待两分钟之后才能再被使用，SO_REUSEADDR是让端口释放后立即就可以被再次使用。
 void Socket::setReuseAddr(bool on){
     int optval= on ? 1:0;
     ::setsockopt(sockfd_,SOL_SOCKET,SO_REUSEADDR,&optval,sizeof optval);

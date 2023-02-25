@@ -52,6 +52,7 @@ public:
     void setReadCallBack(ReadEventCallBack cb) {ReadCallBack=move(cb);};
 
     weak_ptr<void> tie_;
+    //用来判断这个channel是属于acceptor的还是Tcpconnection的
     bool tied_;
     //删除fd
     void remove();

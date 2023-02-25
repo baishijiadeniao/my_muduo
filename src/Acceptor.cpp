@@ -38,7 +38,6 @@ void Acceptor::listen(){
 
 void Acceptor::handleread(){
     InetAddress peerAddr;
-    std::cout<<"run to here-1"<<std::endl;
     int connfd=acceptSocket_.accept(&peerAddr);
     std::cout<<"connfd: "<<connfd<<std::endl;
     if(connfd>=0){

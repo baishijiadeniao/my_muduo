@@ -61,7 +61,7 @@ void EventLoop::handleRead(){
     }
 }
 
-//开始事件循环
+//开始事件循环，运行这个函数的线程一定是创建该evecntloop的线程
 //监听两类fd，一类是client的fd，一类是wakeupfd
 void EventLoop::loop(){
     looping_=true;
@@ -71,13 +71,11 @@ void EventLoop::loop(){
     while(!quit_){
         activeChannelList_.clear();
         pollReturnTime_=poller_->poll(kPollTimeMs,&activeChannelList_);
-        std::cout<<"run to here12"<<std::endl;
         std::cout<<activeChannelList_.size()<<std::endl;
         for(Channel* channel:activeChannelList_){
             //poller监听channel发生了哪些事件，然后返回给eventloop，eventloop通知channel处理相应的事件
             channel->handlewithEvent(pollReturnTime_);
         }
-        std::cout<<"run to here13"<<std::endl;        
         //执行当前eventloop事件循环需要处理的回调操作,queueInLoop执行的函数都放到PendingFunctors执行
         //mainloop负责accept事件，它事先注册一个回调，当唤醒subloop后，subloop执行下面方法，执行之前mainloop注册的回调
         doPendingFunctors();
@@ -115,7 +113,7 @@ void EventLoop::runInLoop(Functor cb){
     if(!t_loopInThisThread){
         cb();
     }else{
-        queueInLoop(cb);  //在非当前loop线程中执行回调，需要唤醒loop所在线程
+        queueInLoop(cb);  //当前线程中没有loop，需要唤醒loop所在线程
     }
 }
 
@@ -128,7 +126,7 @@ void EventLoop::queueInLoop(Functor cb){
     /* 第二种情况中，如果callingPendingFunctor_为true则因为loop在执行回调，如果subloop
     执行完上一轮的回调后，subloop会返回到重新进行while循环，然后阻塞在poll上，就无法执行
     mainloop加到subloop上新的回调了，所以要把subloop唤醒。 */
-    if(!t_loopInThisThread || callingPendingFunctor_){
+    if(! t_loopInThisThread || callingPendingFunctor_){
         wakeup();
     }
 }

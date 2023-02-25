@@ -32,5 +32,3 @@ private:
     //负责轮询、唤醒subloop，然后将channel分发给subloop
     NewConnectionCallBack newConnectionCallBack;
 };
-
-

@@ -31,7 +31,7 @@ TcpServer::TcpServer(EventLoop* loop,const InetAddress& listenAddr,const std::st
 
 TcpServer::~TcpServer(){
     for(auto& item:connections_){
-        //如果直接reset的话就无法访问TcpConnection::connDestroyed，这个局部的TcpConnectionPtr出了这个大括号可以自动被释放
+        //如果直接reset的话就无法访问TcpConnection::connectDestroyed，这个局部的TcpConnectionPtr出了这个大括号可以自动被释放
         TcpConnectionPtr conn(item.second);
         item.second.reset();
         //销毁连接
@@ -55,13 +55,11 @@ void TcpServer::setThreadNum(int numThreads){
 
 void TcpServer::newConnection(int sockfd,const InetAddress& peerAddr){
     //轮询得到可用的subloop
-    std::cout<<"run to here"<<std::endl;
     EventLoop* ioLoop=threadpool_->getNextloops();
     char buf[64]= {0};
     snprintf(buf,sizeof(buf),"-%s#%d",ipPort_.c_str(),nextConnId_);
     ++nextConnId_;
     string connName= name_ + buf;
-    std::cout<<"run to here1"<<std::endl;
     INFO_LOG("TcpServer::newConnection[%s] - new connection [%s] from %s \n",name_.c_str(),connName.c_str(),peerAddr.toIpPort().c_str());
 
     struct sockaddr_in local;
@@ -86,7 +84,6 @@ void TcpServer::newConnection(int sockfd,const InetAddress& peerAddr){
     conn->setWriteCompletCallBack(writeCompletCallBack_);
     //设置了如何关闭连接的回调
     conn->setCloseCallBack(std::bind(&TcpServer::removeConnection,this,std::placeholders::_1));
-    std::cout<<"run to here2"<<std::endl;
     //建立连接
     ioLoop->runInLoop(std::bind(&TcpConnection::connectEstablished,conn));
 }

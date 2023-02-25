@@ -21,6 +21,7 @@ EventloopThread::~EventloopThread(){
     }
 }
 
+//获取每个线程的loop
 EventLoop* EventloopThread::startloop(){
     //创建一个线程执行Thread里的func，即下面的threadFunc
     thread_.start();
